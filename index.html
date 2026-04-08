@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Good Morning — Lennie · Morning Vibes</title>
+  <!-- Google Material Icons + Fonts -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,800&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #000000;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* dark base dengan sedikit hangat */
+    .warm-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 40%, rgba(255,180,40,0.05) 0%, #000000 90%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* progress bar bernuansa pagi */
+    #progress-container {
+      position: fixed;
+      bottom: 6vh;
+      left: 6%;
+      width: 88%;
+      height: 2px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      z-index: 30;
+      backdrop-filter: blur(2px);
+      transition: opacity 0.6s ease;
+    }
+    #progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #FFB347, #FF8C42);
+      border-radius: 4px;
+      box-shadow: 0 0 8px #FFB347;
+      transition: width 0.04s linear;
+    }
+
+    /* stage utama */
+    #stage {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 1rem;
+      transition: opacity 0.6s ease;
+    }
+
+    /* phrase container */
+    .phrase {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      max-width: min(88vw, 760px);
+      width: 100%;
+      pointer-events: none;
+      gap: 0.65rem;
+      padding: 0 0.8rem;
+    }
+
+    .phrase-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 0.3rem;
+      width: 100%;
+      margin-bottom: 0.2rem;
+    }
+
+    .word {
+      display: inline-block;
+      font-family: 'Playfair Display', serif;
+      font-weight: 500;
+      color: #FFF5E6;
+      text-shadow: 0 2px 12px rgba(255,180,70,0.2);
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(6px);
+      will-change: opacity, transform, filter;
+      transition: opacity 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.35s ease, filter 0.3s ease;
+      letter-spacing: -0.01em;
+    }
+
+    .bword {
+      display: inline-block;
+      font-family: 'Playfair Display', serif;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FFC085, #FFA559);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 20px rgba(255,165,80,0.6);
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(6px);
+      will-change: opacity, transform, filter;
+      transition: opacity 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.35s ease, filter 0.3s ease;
+    }
+
+    .tword {
+      display: inline-block;
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(255, 200, 140, 0.75);
+      letter-spacing: 0.02em;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      opacity: 0;
+      transform: translateY(10px);
+      filter: blur(4px);
+      transition: opacity 0.6s ease, transform 0.5s ease, filter 0.5s ease;
+    }
+
+    .emoji-glow {
+      display: inline-block;
+      filter: drop-shadow(0 0 6px #FFB347);
+      animation: gentleFloat 3s infinite ease-in-out;
+    }
+
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    /* animasi masuk/keluar phrase */
+    @keyframes enterRight {
+      0% { opacity: 0; transform: translateX(70px) rotateY(-12deg); filter: blur(14px); }
+      100% { opacity: 1; transform: translateX(0) rotateY(0); filter: blur(0); }
+    }
+    @keyframes enterLeft {
+      0% { opacity: 0; transform: translateX(-70px) rotateY(12deg); filter: blur(14px); }
+      100% { opacity: 1; transform: translateX(0) rotateY(0); filter: blur(0); }
+    }
+    @keyframes enterUp {
+      0% { opacity: 0; transform: translateY(50px) rotateX(10deg); filter: blur(14px); }
+      100% { opacity: 1; transform: translateY(0) rotateX(0); filter: blur(0); }
+    }
+    @keyframes enterDown {
+      0% { opacity: 0; transform: translateY(-50px) rotateX(-10deg); filter: blur(14px); }
+      100% { opacity: 1; transform: translateY(0) rotateX(0); filter: blur(0); }
+    }
+    @keyframes exitLeft {
+      0% { opacity: 1; transform: translateX(0); filter: blur(0); }
+      100% { opacity: 0; transform: translateX(-70px) rotateY(12deg); filter: blur(14px); }
+    }
+    @keyframes exitRight {
+      0% { opacity: 1; transform: translateX(0); filter: blur(0); }
+      100% { opacity: 0; transform: translateX(70px) rotateY(-12deg); filter: blur(14px); }
+    }
+    @keyframes exitUp {
+      0% { opacity: 1; transform: translateY(0); filter: blur(0); }
+      100% { opacity: 0; transform: translateY(50px) rotateX(10deg); filter: blur(14px); }
+    }
+
+    .eR { animation: enterRight 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards; }
+    .eL { animation: enterLeft 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards; }
+    .eU { animation: enterUp 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards; }
+    .eD { animation: enterDown 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards; }
+    .xL { animation: exitLeft 0.55s ease forwards; }
+    .xR { animation: exitRight 0.55s ease forwards; }
+    .xU { animation: exitUp 0.55s ease forwards; }
+
+    /* PLAY SCREEN MODERN */
+    #play-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000000;
+      transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.2), filter 0.6s ease;
+      cursor: pointer;
+    }
+    #play-screen.hide {
+      opacity: 0;
+      filter: blur(20px);
+      pointer-events: none;
+    }
+
+    .glass-card {
+      text-align: center;
+      padding: 2.2rem 2rem;
+      border-radius: 56px;
+      background: rgba(10,10,10,0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,180,70,0.2);
+      box-shadow: 0 25px 40px -12px rgba(0,0,0,0.7);
+      transition: transform 0.2s;
+    }
+    .glass-card:hover {
+      transform: scale(1.01);
+    }
+
+    .ps-artist {
+      font-size: 13px;
+      letter-spacing: 0.4em;
+      color: #FFB85C;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    .ps-title {
+      font-size: 56px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FFE0B5, #FFB347);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      font-family: 'Playfair Display', serif;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .ps-sub {
+      font-size: 14px;
+      color: rgba(255,200,130,0.8);
+      font-weight: 300;
+      margin: 10px 0 6px;
+    }
+    .material-play {
+      margin: 20px auto 0;
+      background: linear-gradient(135deg, #FFB85C, #FF8C42);
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(255,140,66,0.5);
+      transition: transform 0.2s ease, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .material-play:hover {
+      transform: scale(1.04);
+      box-shadow: 0 12px 32px rgba(255,140,66,0.7);
+    }
+    .material-play .material-icons {
+      font-size: 44px;
+      color: #1e1e1e;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+    }
+    .tap-hint {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: rgba(255,200,100,0.5);
+      margin-top: 16px;
+      font-weight: 300;
+    }
+
+    /* ========= PHOTOCARD (POLAROID) ========= */
+    .photocard-container {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.2);
+    }
+    .photocard-container.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .polaroid {
+      background: #fffcf7;
+      padding: 14px 14px 28px 14px;
+      border-radius: 12px 24px 12px 24px;
+      box-shadow: 0 30px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,245,235,0.3);
+      transform: rotate(-2deg) scale(0.9);
+      transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.2), box-shadow 0.3s ease;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      perspective: 800px;
+      will-change: transform;
+      animation: photocardAppear 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.2) forwards;
+    }
+    @keyframes photocardAppear {
+      0% {
+        opacity: 0;
+        transform: rotate(-5deg) scale(0.7) translateY(40px);
+        filter: blur(12px);
+      }
+      100% {
+        opacity: 1;
+        transform: rotate(-2deg) scale(1) translateY(0);
+        filter: blur(0);
+      }
+    }
+    .polaroid:hover {
+      transform: rotate(0deg) scale(1.02) translateY(-8px);
+      box-shadow: 0 40px 50px rgba(0,0,0,0.5);
+    }
+    .polaroid-tape {
+      position: absolute;
+      width: 56px;
+      height: 22px;
+      background: rgba(210,150,130,0.5);
+      top: -12px;
+      left: 50%;
+      margin-left: -28px;
+      border-radius: 2px;
+      transform: rotate(-8deg);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      pointer-events: none;
+    }
+    .photo-frame {
+      width: clamp(220px, 60vw, 320px);
+      height: clamp(240px, 65vw, 360px);
+      overflow: hidden;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #fad5df, #f3b6c8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .photo-placeholder {
+      font-size: 3rem;
+      color: #9b4e64;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+    .photo-placeholder span:first-child {
+      font-size: 3.5rem;
+    }
+    .photo-placeholder span:last-child {
+      font-size: 0.75rem;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .polaroid-caption {
+      font-family: 'Kalam', cursive;
+      font-size: 0.85rem;
+      color: #b98293;
+      margin-top: 12px;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+    .photocard-close {
+      position: absolute;
+      bottom: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,200,100,0.2);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,180,70,0.4);
+      border-radius: 40px;
+      padding: 8px 20px;
+      color: #FFD8A0;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .photocard-close:hover {
+      background: rgba(255,180,70,0.4);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+<div class="warm-overlay"></div>
+<div id="progress-container"><div id="progress-fill"></div></div>
+<div id="stage"></div>
+
+<div id="play-screen" onclick="startExperience()">
+  <div class="glass-card">
+    <div class="ps-artist">Lennie</div>
+    <div class="ps-title">Good Morning</div>
+    <div class="ps-sub">awali hari dengan harapan</div>
+    <div class="material-play">
+      <span class="material-icons">play_arrow</span>
+    </div>
+    <div class="tap-hint">tap to begin</div>
+  </div>
+</div>
+
+<!-- PHOTOCARD (muncul setelah lirik selesai) -->
+<div id="photocardContainer" class="photocard-container">
+  <div class="polaroid" id="polaroidCard">
+    <div class="polaroid-tape"></div>
+    <div class="photo-frame" id="photoFrame">
+      <div class="photo-placeholder" id="photoPlaceholder" style="display:flex;">
+        <span>🌸💘</span>
+        <span>img.jpg</span>
+      </div>
+      <img id="uploadedPhoto" src="img.jpg" alt="foto pagi" style="display:none;" onerror="this.style.display='none'; document.getElementById('photoPlaceholder').style.display='flex';">
+    </div>
+    <p class="polaroid-caption">☀️ selamat pagi, sayangku 🌻</p>
+    <div class="photocard-close" id="closePhotocard">tutup ✕</div>
+  </div>
+</div>
+
+<script>
+  // --------------------------------------------------------------
+  // LIRIK "Good Morning" — Lennie (berdasarkan transcript.json)
+  // --------------------------------------------------------------
+  const TOTAL_DURATION = 26.0;
+
+  const PHRASES = [
+    {
+      dir: "right", align: "center",
+      tk: [
+        { w: "Good", s: 0.50, sz: 52, wt: 600 },
+        { w: "morning.", s: 0.759, sz: 58, wt: 700 },
+        { br: 1 },
+        { em: "☀️", sz: 64 },
+        { br: 1 },
+        { t: "— selamat pagi, sinarmu terang", sz: 14 }
+      ]
+    },
+    {
+      dir: "left", align: "left",
+      tk: [
+        { w: "I", s: 2.20, sz: 36, wt: 400, it: 1 },
+        { w: "know", s: 2.319, sz: 44, wt: 500 },
+        { w: "it's", s: 2.599, sz: 34, wt: 400, it: 1 },
+        { w: "hard", s: 2.899, sz: 48, wt: 600 },
+        { w: "to", s: 3.22, sz: 32, wt: 300, it: 1 },
+        { w: "wake", s: 3.419, sz: 52, wt: 700 },
+        { w: "up,", s: 3.839, sz: 48, wt: 600 },
+        { br: 1 },
+        { w: "because", s: 4.339, sz: 38, wt: 400 },
+        { w: "the", s: 4.759, sz: 30, wt: 300 },
+        { b: "sun's", s: 5.039, sz: 58, wt: 800 },
+        { w: "in", s: 5.46, sz: 30, wt: 300 },
+        { w: "your", s: 5.679, sz: 34, wt: 400 },
+        { w: "eyes", s: 5.98, sz: 44, wt: 500 },
+        { br: 1 },
+        { t: "— aku tahu sulit bangun, karena mata silau mentari", sz: 13 }
+      ]
+    },
+    {
+      dir: "up", align: "center",
+      tk: [
+        { w: "and", s: 6.50, sz: 32, wt: 300, it: 1 },
+        { w: "sometimes", s: 6.679, sz: 44, wt: 500 },
+        { w: "life", s: 7.279, sz: 48, wt: 600 },
+        { w: "kinda", s: 7.559, sz: 42, wt: 400 },
+        { b: "sucks.", s: 8.099, sz: 70, wt: 900 },
+        { br: 1 },
+        { em: "🌧️", sz: 56 },
+        { br: 1 },
+        { w: "But", s: 8.619, sz: 38, wt: 600 },
+        { w: "you", s: 8.859, sz: 36, wt: 500 },
+        { b: "got", s: 9.119, sz: 58, wt: 800 },
+        { w: "this.", s: 9.439, sz: 52, wt: 700 },
+        { br: 1 },
+        { t: "— terkadang hidup terasa berat, tapi kamu pasti kuat", sz: 13 }
+      ]
+    },
+    {
+      dir: "right", align: "right",
+      tk: [
+        { w: "And", s: 10.579, sz: 34, wt: 400, it: 1 },
+        { w: "hey,", s: 10.859, sz: 44, wt: 600, it: 1 },
+        { w: "you", s: 11.739, sz: 38, wt: 500 },
+        { w: "never", s: 11.92, sz: 44, wt: 600 },
+        { b: "know.", s: 12.259, sz: 64, wt: 900 },
+        { br: 1 },
+        { em: "✨", sz: 58 },
+        { br: 1 },
+        { t: "— dan hei, kamu tak pernah tahu", sz: 13 }
+      ]
+    },
+    {
+      dir: "left", align: "left",
+      tk: [
+        { w: "There's", s: 13.139, sz: 40, wt: 500 },
+        { w: "a", s: 13.359, sz: 28, wt: 300, it: 1 },
+        { b: "million", s: 13.479, sz: 68, wt: 800 },
+        { w: "different", s: 14.00, sz: 48, wt: 600 },
+        { w: "ways", s: 14.42, sz: 52, wt: 700 },
+        { w: "that", s: 14.899, sz: 32, wt: 400 },
+        { w: "this", s: 15.079, sz: 34, wt: 400 },
+        { w: "whole", s: 15.319, sz: 46, wt: 600 },
+        { w: "day", s: 15.619, sz: 50, wt: 700 },
+        { w: "could", s: 15.92, sz: 38, wt: 500 },
+        { b: "go,", s: 16.199, sz: 62, wt: 800 },
+        { br: 1 },
+        { t: "— ada sejuta cara hari ini berjalan", sz: 13 }
+      ]
+    },
+    {
+      dir: "up", align: "center",
+      tk: [
+        { w: "so", s: 16.719, sz: 36, wt: 400, it: 1 },
+        { w: "I'm", s: 17.359, sz: 36, wt: 500 },
+        { w: "just", s: 17.60, sz: 34, wt: 400, it: 1 },
+        { b: "popping", s: 17.84, sz: 64, wt: 800 },
+        { w: "in", s: 18.559, sz: 32, wt: 300 },
+        { w: "to", s: 19.379, sz: 30, wt: 300 },
+        { w: "say,", s: 19.659, sz: 44, wt: 600 },
+        { br: 1 },
+        { w: "I", s: 21.779, sz: 32, wt: 400 },
+        { w: "hope", s: 21.959, sz: 48, wt: 700 },
+        { w: "you", s: 22.319, sz: 36, wt: 500 },
+        { w: "have", s: 22.559, sz: 38, wt: 500 },
+        { w: "a", s: 22.799, sz: 28, wt: 300 },
+        { b: "good", s: 23.019, sz: 68, wt: 900 },
+        { w: "day.", s: 23.539, sz: 56, wt: 700 },
+        { br: 1 },
+        { t: "— aku singgah bilang: semoga harimu indah", sz: 13 }
+      ]
+    },
+    {
+      dir: "right", align: "center",
+      tk: [
+        { em: "🌤️", sz: 72 },
+        { br: 1 },
+        { t: "— selamat pagi, dunia menantimu", sz: 14 }
+      ]
+    }
+  ];
+
+  // ------------------- GLOBAL -------------------
+  let audioElem = null;
+  let animFrame = null;
+  let currentPhraseDiv = null;
+  let currentIdx = -1;
+  let fallbackStart = null;
+  let isActive = false;
+  let ended = false;
+
+  const progressFill = document.getElementById("progress-fill");
+  const stageEl = document.getElementById("stage");
+  const progressContainer = document.getElementById("progress-container");
+  const photocardContainer = document.getElementById("photocardContainer");
+
+  function getCurrentSeconds() {
+    if (audioElem && !audioElem.paused && !audioElem.ended) {
+      return audioElem.currentTime;
+    } else if (fallbackStart !== null && !ended) {
+      let elapsed = (performance.now() - fallbackStart) / 1000;
+      return Math.min(elapsed, TOTAL_DURATION);
+    }
+    return 0;
+  }
+
+  function findPhraseIndex(sec) {
+    for (let i = 0; i < PHRASES.length; i++) {
+      const firstToken = PHRASES[i].tk.find(t => (t.w !== undefined || t.b !== undefined || t.em !== undefined) && t.s !== undefined);
+      if (!firstToken) continue;
+      let startTime = firstToken.s;
+      let nextStart = TOTAL_DURATION;
+      if (i + 1 < PHRASES.length) {
+        const nextFirst = PHRASES[i+1].tk.find(t => (t.w !== undefined || t.b !== undefined || t.em !== undefined) && t.s !== undefined);
+        if (nextFirst) nextStart = nextFirst.s;
+      }
+      if (sec >= startTime - 0.08 && sec < nextStart - 0.05) return i;
+    }
+    return -1;
+  }
+
+  function buildPhraseElement(phraseObj) {
+    const container = document.createElement("div");
+    container.className = "phrase";
+    const align = phraseObj.align;
+    container.style.alignItems = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
+
+    let rows = [[]];
+    phraseObj.tk.forEach(item => {
+      if (item.br) rows.push([]);
+      else rows[rows.length-1].push(item);
+    });
+
+    rows.filter(r => r.length).forEach(row => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "phrase-row";
+      rowDiv.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
+      row.forEach(token => {
+        if (token.w !== undefined) {
+          const span = document.createElement("span");
+          span.className = "word";
+          span.style.fontSize = `${token.sz}px`;
+          span.style.fontWeight = token.wt;
+          span.style.fontStyle = token.it ? "italic" : "normal";
+          span.textContent = token.w;
+          if (token.s) span.dataset.s = token.s;
+          rowDiv.appendChild(span);
+        } 
+        else if (token.b !== undefined) {
+          const span = document.createElement("span");
+          span.className = "bword";
+          span.style.fontSize = `${token.sz}px`;
+          span.style.fontWeight = token.wt;
+          span.textContent = token.b;
+          if (token.s) span.dataset.s = token.s;
+          rowDiv.appendChild(span);
+        }
+        else if (token.em !== undefined) {
+          const emSpan = document.createElement("span");
+          emSpan.textContent = token.em;
+          emSpan.style.fontSize = `${token.sz}px`;
+          emSpan.className = "emoji-glow";
+          rowDiv.appendChild(emSpan);
+        }
+        else if (token.t !== undefined) {
+          const transSpan = document.createElement("span");
+          transSpan.className = "tword";
+          transSpan.style.fontSize = `${token.sz}px`;
+          transSpan.textContent = token.t;
+          transSpan.dataset.trans = "1";
+          rowDiv.appendChild(transSpan);
+        }
+      });
+      container.appendChild(rowDiv);
+    });
+    return container;
+  }
+
+  function switchToPhrase(index) {
+    if (currentPhraseDiv && currentIdx !== index) {
+      const oldDiv = currentPhraseDiv;
+      const oldDir = PHRASES[currentIdx]?.dir || "right";
+      let exitClass = "xR";
+      if (oldDir === "left") exitClass = "xL";
+      else if (oldDir === "up") exitClass = "xU";
+      else exitClass = "xR";
+      oldDiv.classList.add(exitClass);
+      setTimeout(() => { if (oldDiv.parentNode) oldDiv.remove(); }, 550);
+    }
+    const newPhrase = PHRASES[index];
+    if (!newPhrase) return;
+
+    const newDiv = buildPhraseElement(newPhrase);
+    let enterClass = "eR";
+    if (newPhrase.dir === "left") enterClass = "eL";
+    else if (newPhrase.dir === "up") enterClass = "eU";
+    else if (newPhrase.dir === "right") enterClass = "eR";
+    newDiv.classList.add(enterClass);
+    stageEl.appendChild(newDiv);
+    currentPhraseDiv = newDiv;
+    currentIdx = index;
+
+    setTimeout(() => {
+      if (currentPhraseDiv === newDiv) {
+        newDiv.querySelectorAll("[data-trans]").forEach(el => {
+          el.style.transition = "opacity 0.6s ease, transform 0.5s ease, filter 0.5s ease";
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+          el.style.filter = "blur(0px)";
+        });
+      }
+    }, 450);
+  }
+
+  function revealTimedWords(currentTime) {
+    if (!currentPhraseDiv) return;
+    const allSpans = currentPhraseDiv.querySelectorAll("[data-s]");
+    allSpans.forEach(span => {
+      const startVal = parseFloat(span.dataset.s);
+      if (!isNaN(startVal) && currentTime >= startVal - 0.03 && !span.dataset.revealed) {
+        span.dataset.revealed = "true";
+        span.style.opacity = "1";
+        span.style.transform = "translateY(0)";
+        span.style.filter = "blur(0px)";
+      }
+    });
+  }
+
+  function showPhotocard() {
+    photocardContainer.classList.add("show");
+    // efek 3D tilt pada polaroid
+    const polaroid = document.getElementById("polaroidCard");
+    if (polaroid) {
+      polaroid.addEventListener("mousemove", (e) => {
+        const rect = polaroid.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        const rotateY = x * 12;
+        const rotateX = y * -12;
+        polaroid.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+      });
+      polaroid.addEventListener("mouseleave", () => {
+        polaroid.style.transform = "rotate(-2deg) scale(1) translateY(0)";
+      });
+    }
+    // tombol close
+    document.getElementById("closePhotocard").addEventListener("click", () => {
+      photocardContainer.classList.remove("show");
+    });
+  }
+
+  function finishAndShowPhotocard() {
+    if (ended) return;
+    ended = true;
+    if (audioElem) audioElem.pause();
+    if (currentPhraseDiv) {
+      currentPhraseDiv.classList.add("xU");
+      setTimeout(() => { if(currentPhraseDiv) currentPhraseDiv.remove(); }, 500);
+    }
+    if (animFrame) cancelAnimationFrame(animFrame);
+    animFrame = null;
+    // sembunyikan progress bar perlahan
+    progressContainer.style.opacity = "0";
+    // tampilkan photocard
+    setTimeout(() => {
+      showPhotocard();
+    }, 400);
+  }
+
+  function animationLoop() {
+    if (!isActive && !audioElem && fallbackStart === null) return;
+    const now = getCurrentSeconds();
+    if (now >= TOTAL_DURATION - 0.1 && !ended) {
+      finishAndShowPhotocard();
+      return;
+    }
+    const percent = Math.min((now / TOTAL_DURATION) * 100, 100);
+    progressFill.style.width = percent + "%";
+
+    const phraseIdx = findPhraseIndex(now);
+    if (phraseIdx !== -1 && phraseIdx !== currentIdx) {
+      switchToPhrase(phraseIdx);
+    }
+    revealTimedWords(now);
+    animFrame = requestAnimationFrame(animationLoop);
+  }
+
+  function startExperience() {
+    if (isActive) return;
+    const playScreen = document.getElementById("play-screen");
+    playScreen.classList.add("hide");
+
+    audioElem = new Audio();
+    audioElem.src = "good_morning.mp3";
+    audioElem.preload = "auto";
+    audioElem.volume = 0.8;
+    const playPromise = audioElem.play();
+    playPromise.then(() => {
+      isActive = true;
+      fallbackStart = null;
+      animationLoop();
+    }).catch(() => {
+      console.log("Audio tidak tersedia, menggunakan timer visual (tanpa suara)");
+      audioElem = null;
+      fallbackStart = performance.now();
+      isActive = true;
+      animationLoop();
+    });
+    if (audioElem) {
+      audioElem.onended = () => {
+        finishAndShowPhotocard();
+      };
+    }
+  }
+
+  // inisialisasi foto
+  const imgElement = document.getElementById("uploadedPhoto");
+  const placeholderDiv = document.getElementById("photoPlaceholder");
+  imgElement.onload = function() {
+    imgElement.style.display = "block";
+    placeholderDiv.style.display = "none";
+  };
+  imgElement.onerror = function() {
+    imgElement.style.display = "none";
+    placeholderDiv.style.display = "flex";
+  };
+  if (imgElement.complete && imgElement.naturalHeight !== 0) {
+    imgElement.style.display = "block";
+    placeholderDiv.style.display = "none";
+  } else if (imgElement.complete && imgElement.naturalHeight === 0) {
+    imgElement.style.display = "none";
+    placeholderDiv.style.display = "flex";
+  }
+</script>
+</body>
+</html>
